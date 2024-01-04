@@ -2,6 +2,7 @@ package com.example.voting.service;
 
 import com.example.voting.exception.ApiException;
 import com.example.voting.model.vote.*;
+import com.example.voting.payload.getaveragevotes.GetAverageVotesResponse;
 import com.example.voting.payload.getvote.GetVoteResponse;
 import com.example.voting.payload.getvoting.GetVotingResponse;
 import com.example.voting.payload.getvotingsbyday.GetVotingsByDayResponse;
@@ -11,14 +12,13 @@ import com.example.voting.payload.savevoting.SaveVotingRequest;
 import com.example.voting.payload.savevoting.SaveVotingResponse;
 import com.example.voting.util.AppUtils;
 import com.example.voting.util.DateUtil;
+import com.example.voting.util.NumberUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -137,5 +137,34 @@ public class VoteService {
                                 getVotingResponse.getVotingResult(), getVotingResponse.getNumberOfMPs(), voteResponses));
         }
         return new GetVotingsByDayResponse(votingResponses);
+    }
+
+    public GetAverageVotesResponse getAverageVotes(LocalDateTime from, LocalDateTime till) {
+        Map<String, Integer> numberOfVotesByMPs = new HashMap<>();
+        Set<String> codeOfMPs = new HashSet<>();
+        List<Voting> votings = votingRepository.findSimpleAndQualifiedByPeriod(from, till);
+        int total = 0;
+        double average = 0;
+
+        for (Voting voting : votings) {
+            for (Vote vote : voting.getVotes()) {
+                if(numberOfVotesByMPs.containsKey(vote.getCodeOfMP())) {
+                    numberOfVotesByMPs.put(vote.getCodeOfMP(), numberOfVotesByMPs.get(vote.getCodeOfMP()) + 1);
+                } else {
+                    numberOfVotesByMPs.put(vote.getCodeOfMP(), 1);
+                }
+            }
+        }
+
+        for (Map.Entry<String, Integer> set : numberOfVotesByMPs.entrySet()) {
+            codeOfMPs.add(set.getKey());
+            total += set.getValue();
+        }
+
+        if (!codeOfMPs.isEmpty()) {
+            average = total / (double) codeOfMPs.size();
+        }
+
+        return new GetAverageVotesResponse(NumberUtil.trimDouble(average));
     }
 }

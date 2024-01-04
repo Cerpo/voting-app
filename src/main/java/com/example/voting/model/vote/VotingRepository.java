@@ -17,4 +17,7 @@ public interface VotingRepository extends JpaRepository<Voting, Integer> {
 
     @Query("SELECT v FROM Voting v WHERE (v.date BETWEEN :fromDate AND :tillDate)")
     List<Voting> findAllByPeriod(@Param("fromDate") LocalDateTime from, @Param("tillDate") LocalDateTime till);
+
+    @Query("SELECT v FROM Voting v WHERE (v.date BETWEEN :fromDate AND :tillDate) AND (v.votingType = 1 or v.votingType = 2)")
+    List<Voting> findSimpleAndQualifiedByPeriod(@Param("fromDate") LocalDateTime from, @Param("tillDate") LocalDateTime till);
 }
