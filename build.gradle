@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.1'
 	id 'io.spring.dependency-management' version '1.1.4'
+	id 'com.palantir.docker' version '0.35.0'
 }
 
 group = 'com.example'
@@ -33,4 +34,12 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+//docker run -p 8080:8080 voting-app:latest
+tasks.register('createDockerImage', Exec) {
+	dependsOn build
+	group = 'docker'
+
+	commandLine 'docker', 'build', '-t', 'voting-app:latest', '.'
 }
