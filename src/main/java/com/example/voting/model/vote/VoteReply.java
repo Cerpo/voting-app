@@ -33,6 +33,6 @@ public enum VoteReply {
                 return t;
             }
         }
-        throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid vote.");
+        throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid vote reply.");
     }
 }
