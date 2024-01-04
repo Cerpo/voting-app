@@ -1,6 +1,7 @@
 package com.example.voting.controller;
 
 import com.example.voting.payload.getvote.GetVoteResponse;
+import com.example.voting.payload.getvoting.GetVotingResponse;
 import com.example.voting.payload.savevoting.SaveVotingRequest;
 import com.example.voting.payload.savevoting.SaveVotingResponse;
 import com.example.voting.service.VoteService;
@@ -28,5 +29,11 @@ public class VoteController {
     @ResponseBody
     public ResponseEntity<GetVoteResponse> getVote(@RequestParam("szavazas") String votingId, @RequestParam("kepviselo") String codeOfMP) {
         return new ResponseEntity<>(voteService.getVote(votingId, codeOfMP), HttpStatus.OK);
+    }
+
+    @GetMapping("/eredmeny")
+    @ResponseBody
+    public ResponseEntity<GetVotingResponse> getVoting(@RequestParam("szavazas") String votingId) {
+        return new ResponseEntity<>(voteService.getVoting(votingId), HttpStatus.OK);
     }
 }
