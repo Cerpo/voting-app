@@ -2,8 +2,10 @@ package com.example.voting.service;
 
 import com.example.voting.exception.ApiException;
 import com.example.voting.model.vote.Vote;
+import com.example.voting.model.vote.VoteReply;
 import com.example.voting.model.vote.Voting;
 import com.example.voting.model.vote.VotingRepository;
+import com.example.voting.payload.getvote.GetVoteResponse;
 import com.example.voting.payload.savevoting.SaveVotingRequest;
 import com.example.voting.payload.savevoting.SaveVotingResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,5 +41,20 @@ public class VoteService {
         }
 
         return (codeOfMPs.size() == voting.getVotes().size()) && codeOfMPs.contains(president);
+    }
+
+    public GetVoteResponse getVote(String votingId, String codeOfMP) {
+        Voting voting = votingRepository.findById(Integer.valueOf(votingId)).orElseThrow(() ->
+                new ApiException(HttpStatus.NOT_FOUND, "Voting with the specified parameters does not exist."));
+        return new GetVoteResponse(getReplyOfMP(voting, codeOfMP));
+    }
+
+    private VoteReply getReplyOfMP(Voting voting, String codeOfMP) {
+        for (Vote vote : voting.getVotes()) {
+            if (vote.getCodeOfMP().equals(codeOfMP)) {
+                return vote.getVoteReply();
+            }
+        }
+        throw new ApiException(HttpStatus.NOT_FOUND, "Voting with the specified parameters does not exist.");
     }
 }
