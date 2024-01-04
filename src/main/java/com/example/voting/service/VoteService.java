@@ -4,13 +4,20 @@ import com.example.voting.exception.ApiException;
 import com.example.voting.model.vote.*;
 import com.example.voting.payload.getvote.GetVoteResponse;
 import com.example.voting.payload.getvoting.GetVotingResponse;
+import com.example.voting.payload.getvotingsbyday.GetVotingsByDayResponse;
+import com.example.voting.payload.getvotingsbyday.VoteResp;
+import com.example.voting.payload.getvotingsbyday.VotingResp;
 import com.example.voting.payload.savevoting.SaveVotingRequest;
 import com.example.voting.payload.savevoting.SaveVotingResponse;
 import com.example.voting.util.AppUtils;
+import com.example.voting.util.DateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -102,5 +109,33 @@ public class VoteService {
         Voting lastSimpleVoting = votingRepository.findLastPresenceVotingByDate().orElseThrow(() ->
                 new ApiException(HttpStatus.NOT_FOUND, "No presence voting found."));
         return lastSimpleVoting.getVotes().size();
+    }
+
+    public GetVotingsByDayResponse getVotingsByDay(String date) {
+        List<Voting> votings;
+        if (!DateUtil.isValidDateFormat(date)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid date format. Correct date format: yyyy-MM-dd");
+        }
+        votings = votingRepository.findAllByPeriod(DateUtil.getStartOfDay(date), DateUtil.getEndOfDay(date));
+
+        return createGetVotingsByDayResponse(votings);
+    }
+
+    private GetVotingsByDayResponse createGetVotingsByDayResponse(List<Voting> votings) {
+        GetVotingResponse getVotingResponse;
+        List<VotingResp> votingResponses;
+        List<VoteResp> voteResponses;
+
+        votingResponses = new ArrayList<>();
+        for (Voting voting : votings) {
+            voteResponses = new ArrayList<>();
+            for (Vote vote : voting.getVotes()) {
+                voteResponses.add(new VoteResp(vote.getCodeOfMP(), vote.getVoteReply()));
+            }
+            getVotingResponse = calculateVotingResult(voting);
+            votingResponses.add(new VotingResp(voting.getDate(), voting.getSubject(), voting.getVotingType(), voting.getPresident(),
+                                getVotingResponse.getVotingResult(), getVotingResponse.getNumberOfMPs(), voteResponses));
+        }
+        return new GetVotingsByDayResponse(votingResponses);
     }
 }
